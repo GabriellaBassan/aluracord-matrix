@@ -5,22 +5,23 @@ import { useRouter } from 'next/router'
 import { createClient } from '@supabase/supabase-js'
 import { ButtonSendSticker } from '../src/components/ButtonSendSticker'
 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgwMzc0MSwiZXhwIjoxOTU5Mzc5NzQxfQ.4Cz7VPgLJJSqqqK3PS6kVKFDXaI56Qmip9T56fmsS7I';
-const SUPABASE_URL = 'https://wlzgnpwpgikuiwlwyafq.supabase.co';
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgwMzc0MSwiZXhwIjoxOTU5Mzc5NzQxfQ.4Cz7VPgLJJSqqqK3PS6kVKFDXaI56Qmip9T56fmsS7I'
+const SUPABASE_URL = 'https://wlzgnpwpgikuiwlwyafq.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 function escutaMensagensEmTempoReal(adicionaMensagem) {
   return supabaseClient
     .from('mensagens')
-    .on('INSERT', (respostaLive) => {
-      adicionaMensagem(respostaLive.new);
+    .on('INSERT', respostaLive => {
+      adicionaMensagem(respostaLive.new)
     })
-    .subscribe();
+    .subscribe()
 }
 
 export default function ChatPage() {
-  const roteamento = useRouter();
-  const usuarioLogado = roteamento.query.username;
+  const roteamento = useRouter()
+  const usuarioLogado = roteamento.query.username
   const [mensagem, setMensagem] = React.useState('')
   const [listaDeMensagens, setListaDeMensagens] = React.useState([])
 
@@ -28,34 +29,31 @@ export default function ChatPage() {
     supabaseClient
       .from('mensagens')
       .select('*')
-      .order('id', { ascending: false})
+      .order('id', { ascending: false })
       .then(({ data }) => {
         //  console.log('Dados da consulta', data);
-          setListaDeMensagens(data);
-      });
+        setListaDeMensagens(data)
+      })
 
-    const subscription = escutaMensagensEmTempoReal((novaMensagem) => {
-      console.log('Nova mensagem', novaMensagem);
-      console.log('listaDeMensagem', listaDeMensagem);
-       // Quero reusar um valor de referencia (objeto/array) 
+    const subscription = escutaMensagensEmTempoReal(novaMensagem => {
+      console.log('Nova mensagem', novaMensagem)
+      console.log('listaDeMensagens', listaDeMensagens)
+      // Quero reusar um valor de referencia (objeto/array)
       // Passar uma função pro setState
 
       // setListaDeMensagens([
       //     novaMensagem,
       //     ...listaDeMensagens
       // ])
-      setListaDeMensagens((valorAtualDaLista) => {
-        return [
-          novaMensagem, 
-          ...valorAtualDaLista
-        ]
-      });
-    });
+      setListaDeMensagens(valorAtualDaLista => {
+        return [novaMensagem, ...valorAtualDaLista]
+      })
+    })
 
     return () => {
-      subscription.unsubscribe();
+      subscription.unsubscribe()
     }
-  }, []);
+  }, [])
 
   function handleNovaMensagem(novaMensagem) {
     const mensagem = {
@@ -66,12 +64,10 @@ export default function ChatPage() {
 
     supabaseClient
       .from('mensagens')
-      .insert([
-        mensagem
-      ])
+      .insert([mensagem])
       .then(({ data }) => {
-        console.log('Criando mensagem: ', data);
-      });
+        console.log('Criando mensagem: ', data)
+      })
 
     setMensagem('')
   }
@@ -158,10 +154,43 @@ export default function ChatPage() {
               }}
             />
             {/* CallBack */}
-            <ButtonSendSticker 
-              onStickerClick={(sticker) => {
-                  // console.log('[USANDO O COMPONENTE] Salva esse sticker no banco', sticker);
-                  handleNovaMensagem(':sticker: ' + sticker);
+            <ButtonSendSticker
+              onStickerClick={sticker => {
+                // console.log('[USANDO O COMPONENTE] Salva esse sticker no banco', sticker);
+                handleNovaMensagem(':sticker: ' + sticker)
+              }}
+            />
+            <Button
+              type="button"
+              label="Send"
+              buttonColors={{
+                contrastColor: appConfig.theme.colors.neutrals['000'],
+                mainColor: appConfig.theme.colors.primary[500],
+                mainColorLight: appConfig.theme.colors.primary[400],
+                mainColorStrong: appConfig.theme.colors.primary[600]
+              }}
+              styleSheet={{
+                borderRadius: '10px 5px 10px 5px',
+                padding: '0 3px 0 0',
+                minWidth: '40px',
+                minHeight: '44px',
+                fontSize: '20px',
+                marginBottom: '8px',
+                marginRight: '8px',
+                lineHeight: '0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: appConfig.theme.colors.primary[500],
+                hover: {
+                  filter: 'grayscale(0)'
+                }
+              }}
+              onClick={() => {
+                if (mensagem.length >= 1) {
+                  handleNovaMensagem(mensagem)
+                  document.querySelector('textarea').focus()
+                }
               }}
             />
           </Box>
@@ -250,13 +279,11 @@ function MessageList(props) {
                 {new Date().toLocaleDateString()}
               </Text>
             </Box>
-            {mensagem.texto.startsWith(':sticker:')
-              ? (
-                <Image src={mensagem.texto.replace(':sticker:', '')} />
-              )
-              : (
-                mensagem.texto
-              )}    
+            {mensagem.texto.startsWith(':sticker:') ? (
+              <Image src={mensagem.texto.replace(':sticker:', '')} />
+            ) : (
+              mensagem.texto
+            )}
             {/* {mensagem.texto} */}
           </Text>
         )
