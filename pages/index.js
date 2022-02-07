@@ -2,6 +2,7 @@ import { Box, Button, Text, TextField, Image } from '@skynexui/components'
 import React from 'react';
 import { useRouter } from 'next/router';
 import appConfig from '../config.json'
+import { getNome } from '../src/service/getNome'
 
 function Titulo(props) {
   const Tag = props.tag || 'h1';
@@ -19,23 +20,22 @@ function Titulo(props) {
   )
 }
 
-// Componente React
-//function HomePage() {
-//  // JSX
-//  return (
-//    <div style={{backgroundColor: 'black'}}>
-//      <GlobalStyle />
-//      <Title tag="h2">Boas vindas de volta!</Title>
-//      <h2>Discord - Alura Matrix</h2>
-//    </div>
-//  )
-//}
-//export default HomePage
-
 export default function PaginaInicial() {
-  // const username = 'GabriellaBassan'
-  const [username, setUsername] = React.useState('GabriellaBassan');
+  const [username, setUsername] = React.useState('');
   const roteamento = useRouter();
+  const [nome, setNome] = React.useState('')
+  const [found, setFound] = React.useState(true)
+  const [dirty, setDirty] = React.useState(false)
+
+  function getUrl() {
+    if (!found) {
+        return 'https://www.elegantthemes.com/blog/wp-content/uploads/2020/08/000-http-error-codes.png'
+    }
+    if (username.length > 2) {
+        return `https://github.com/${username}.png`
+    }
+    return 'https://i.pinimg.com/736x/83/32/00/833200e26037f39252a7ad894410c453.jpg'
+}
 
   return (
     <>
@@ -100,27 +100,29 @@ export default function PaginaInicial() {
               {appConfig.name}
             </Text>
 
-            {/*<input 
-              type="text" 
-              value={username}
-              onChange={function (event) {
-                console.log('usuario digitou', event.target.value);
-                // Onde ta o valor?
-                const valor = event.target.value;
-                // Trocar o valor da variavel através do React
-                // e avise quem precisa
-                setUsername(valor);
-              }}
-            /> */} 
             <TextField
               value={username}
+              placeholder='Digite seu usuário GitHub'
               onChange={function (event) {
                 console.log('usuario digitou', event.target.value);
-                // Onde ta o valor?
                 const valor = event.target.value;
-                // Trocar o valor da variavel através do React
-                // e avise quem precisa
+                if (valor.length > 2) {
+                    getNome(valor).then((e) => {
+                        if (e) {
+                            setNome(e)
+                            setFound(true)
+                        } else {
+                            setNome('')
+                            setFound(false)
+                        }
+                    })
+                } else {
+                    setNome('')
+                    setFound(true)
+                }
+
                 setUsername(valor);
+                setDirty(true)
               }}
               fullWidth
               textFieldColors={{
@@ -132,7 +134,29 @@ export default function PaginaInicial() {
                 }
               }}
             />
+            {username.length <= 2 && dirty &&
+                            <Text
+                                styleSheet={{
+                                    marginBottom: '10px', color: appConfig.theme.colors.primary[100],
+                                    fontFamily: 'Play',
+                                }}
+                            >
+                                Digite mais que 2 caracteres.
+                            </Text>}
+
+                        {!found &&
+                            <Text
+                                styleSheet={{
+                                    marginBottom: '10px', color: appConfig.theme.colors.primary[100],
+                                    fontFamily: 'Play'
+                                }}>
+                                Usuário inválido
+                            </Text>
+
+                        }
+
             <Button
+            disabled={username.length <= 2 || !found}
               type="submit"
               label="Entrar"
               fullWidth
@@ -167,19 +191,22 @@ export default function PaginaInicial() {
                 borderRadius: '50%',
                 marginBottom: '16px'
               }}
-              src={`https://github.com/${username}.png`}
+              src={getUrl()}
             />
-            <Text
-              variant="body4"
-              styleSheet={{
-                color: appConfig.theme.colors.neutrals[200],
-                backgroundColor: appConfig.theme.colors.neutrals[900],
-                padding: '3px 10px',
-                borderRadius: '1000px'
-              }}
-            >
-              {username}
+            {found && <Text
+                            variant="body4"
+                            styleSheet={{
+                                color: appConfig.theme.colors.neutrals[200],
+                                backgroundColor: appConfig.theme.colors.neutrals[900],
+                                padding: '3px 10px',
+                                borderRadius: '1000px',
+                                textAlign: 'center',
+                                fontFamily: 'Play'
+                            }}
+                        >
+              {nome || 'Star Butterfly'}
             </Text>
+            }
           </Box>
           {/* Photo Area */}
         </Box>
